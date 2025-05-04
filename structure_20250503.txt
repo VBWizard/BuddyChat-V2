@@ -1,0 +1,50 @@
+buddy_project/
+│
+├── main.py
+│   - Entry point; runs the CLI loop from interface.cli
+│
+├── core/
+│   ├── chat_engine.py
+│   │   ├── load_identity()        # Loads user identity from disk (if present)
+│   │   └── generate_response(...) # Builds system/user prompt and queries OpenAI
+│   │
+│   └── memory.py
+│       ├── load_memory()          # Loads FAISS index + metadata from disk
+│       ├── update_memory(...)     # Adds new entry and embedding to FAISS
+│       ├── save_all(...)          # Persists memory and identity to disk
+│       └── retrieve_context(...)  # Retrieves relevant memory entries via FAISS
+│
+├── audio/
+│   ├── record.py
+│   │   ├── record_audio(...)      # 60-second mic recording with Enter to end
+│   │   └── record_audio_ptt(...)  # Push-to-talk recorder using spacebar
+│   │
+│   ├── transcribe.py
+│   │   └── transcribe_audio(...)  # Transcribes audio using Whisper API
+│   │
+│   └── tts.py
+│       └── speak_response(...)    # Generates and plays TTS using GPT-4o-mini
+│
+├── interface/
+│   ├── cli.py
+│   │   └── run()                  # Main CLI loop: text input, !ptt command, exit, etc.
+│   │
+│   └── ptt_loop.py
+│       └── enter_ptt_mode(...)    # PTT loop with spacebar recording, confirmation, and response
+│
+├── utils/
+│   ├── config.py
+│   │   ├── FAISS_INDEX_FILE       # Path for FAISS index
+│   │   ├── METADATA_FILE          # Path for metadata pickle
+│   │   ├── IDENTITY_FILE          # Path for identity pickle
+│   │   ├── CONTEXT_WINDOW_SIZE    # Max number of chat lines to keep
+│   │   └── SPEAK_OUT              # Global voice output toggle
+│
+├── data/ (optional, for file storage)
+│   ├── faiss_index.bin
+│   ├── faiss_metadata.pkl
+│   ├── identity.pkl
+│   └── buddy_system_prompt.txt
+│
+├── requirements.txt              # All pip dependencies frozen
+└── README.md                     # Project description and usage
