@@ -32,8 +32,9 @@ def run():
     client = openai.OpenAI(api_key=get_api_key(),
                            http_client=get_proxy_client())
 
-    print("\n🚀 FAISS Memory Chat Started! Type 'exit' to quit.\n")
+    print("\n🚀 FAISS Memory Chat Started!")
 
+    print("Talk to the chatbot, type !help to see optional commands, or type 'exit' to quit.\n")
     while True:
         user_input = input("👤 User: ")
         # Allow special commands prefixed with ! to be executed
