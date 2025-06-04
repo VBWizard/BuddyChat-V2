@@ -46,8 +46,19 @@ Once you have your key, you can provide it in one of the following ways:
 1. **Environment variable**  
    Set `OPENAI_API_KEY` in your shell or system environment.
 
-   ```bash
-   export OPENAI_API_KEY=sk-...
+```bash
+export OPENAI_API_KEY=sk-...
+```
+
+## 🌐 Proxy Configuration
+
+Edit `utils/config.py` to set `PROXY_HOST` and `PROXY_PORT` if you need to
+use an HTTP proxy:
+
+```python
+PROXY_HOST = "proxy.example.com"
+PROXY_PORT = 8080
+```
 
 ## 🧙 About
 
