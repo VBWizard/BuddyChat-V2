@@ -39,6 +39,8 @@ buddy_project/
 │   │   ├── IDENTITY_FILE          # Path for identity pickle
 │   │   ├── CONTEXT_WINDOW_SIZE    # Max number of chat lines to keep
 │   │   └── SPEAK_OUT              # Global voice output toggle
+│   │   ├── PROXY_HOST             # Optional HTTP proxy host
+│   │   └── PROXY_PORT             # Optional HTTP proxy port
 │
 ├── data/ (optional, for file storage)
 │   ├── faiss_index.bin

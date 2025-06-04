@@ -12,4 +12,8 @@ IDENTITY_FILE    = os.path.join(DATA_DIR, "identity.pkl")
 CONTEXT_WINDOW_SIZE = 1000  # how many messages to keep in chat history
 SPEAK_OUT = True             # enable TTS by default
 
+# HTTP proxy settings (optional)
+PROXY_HOST = None   # e.g. "proxy.example.com"
+PROXY_PORT = None   # e.g. 8080
+
 os.makedirs(DATA_DIR, exist_ok=True)

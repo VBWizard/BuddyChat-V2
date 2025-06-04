@@ -5,6 +5,7 @@ from core.chat_engine import generate_response, load_identity
 from interface.ptt_loop import enter_ptt_mode
 from audio.tts import speak_response
 from utils.config import CONTEXT_WINDOW_SIZE, SPEAK_OUT
+from utils.network import get_proxy_client
 from tzlocal import get_localzone
 from datetime import datetime
 import openai
@@ -28,7 +29,8 @@ def run():
     # Embedding model used for similarity search
     model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
     # OpenAI client handles chat and speech API calls
-    client = openai.OpenAI(api_key=get_api_key())
+    client = openai.OpenAI(api_key=get_api_key(),
+                           http_client=get_proxy_client())
 
     print("\n🚀 FAISS Memory Chat Started! Type 'exit' to quit.\n")
 
