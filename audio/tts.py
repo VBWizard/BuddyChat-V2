@@ -1,14 +1,14 @@
 import pygame
 import io
 
-def speak_response(text, client):
-    print("🗣️ Generating voice with OpenAI TTS...")
+def speak_response(text, client, instructions):
+    print(f"🗣️ Generating voice with OpenAI TTS (instructions: {instructions})...")
 
     response = client.audio.speech.create(
         model="gpt-4o-mini-tts",
-        voice="verse",
+        voice="ash", # verse
         input=text,
-        instructions="Sound like my best friend."
+        instructions=instructions
     )
 
     pygame.mixer.init()

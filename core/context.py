@@ -40,6 +40,7 @@ def process_command(cmd, metadata, index, identity_info, chat_history, retrieved
         print("  !mute       - Disable voice output (TTS off)")
         print("  !unmute     - Enable voice output (TTS on)")
         print("  !ptt        - Enter Push-to-Talk voice mode (hold spacebar to talk)")
+        print("  !ptt_off    - Exit Push-to-Talk voice mode")
         print("  exit        - Quit the program\n")
         print("  🧠 Memory powered by FAISS. Voice powered by OpenAI.")
         print("  🐶 Tip: Buddy never drops a byte—he’s loyal like that.\n")

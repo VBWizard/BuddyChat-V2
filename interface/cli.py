@@ -8,6 +8,7 @@ from datetime import datetime
 import openai
 from utils.keys import get_api_key
 from core.context import process_command
+import re
 
 def run():
     from sentence_transformers import SentenceTransformer
@@ -40,14 +41,22 @@ def run():
         response = generate_response(user_input, identity_info, retrieved_text, chat_history, client)
 
         print("\n🔍 FAISS Retrieved Memory:")
-        print(retrieved_text)
+        # print(retrieved_text)
         print("\n🤖 Assistant Response:")
         print(f"Assistant: {response}")
         print("-----------------------------------------------------------------------")
 
         if speak_out_flag:
+            # Extract [Tone: ...] if present
+            tone_match = re.match(r"\[Tone:(.*?)\]\s*", response)
+            if tone_match:
+                tts_instructions = tone_match.group(1).strip()
+                response = re.sub(r"^\[Tone:.*?\]\s*", "", response)
+            else:
+                tts_instructions = "Speak naturally."
+
             import threading
-            threading.Thread(target=speak_response, args=(response,client), daemon=True).start()
+            threading.Thread(target=speak_response, args=(response,client, tts_instructions), daemon=True).start()
 
         now_str = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M %p %Z")
         chat_history.append(f"[{now_str}] User: {user_input}")

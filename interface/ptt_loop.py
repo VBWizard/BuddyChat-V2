@@ -5,6 +5,7 @@ from tzlocal import get_localzone
 from audio.record import record_audio_ptt
 from audio.transcribe import transcribe_audio
 from audio.tts import speak_response
+import re
 
 local_tz = get_localzone()
 
@@ -40,12 +41,19 @@ def enter_ptt_mode(index, metadata, identity_info, model, client, chat_history, 
         response = generate_response(user_transcript, identity_info, retrieved_text, chat_history, client)
 
         print("🔍 FAISS Retrieved Memory:")
-        print(retrieved_text)
+        # print(retrieved_text)
         print("🤖 Assistant Response:")
         print(f"Assistant: {response}")
         print("-----------------------------------------------------------------------")
 
         if speak_out:
+            # Extract [Tone: ...] if present
+            tone_match = re.match(r"\[Tone:(.*?)\]\s*", response)
+            if tone_match:
+                tts_instructions = tone_match.group(1).strip()
+                response = re.sub(r"^\[Tone:.*?\]\s*", "", response)
+            else:
+                tts_instructions = "Speak naturally."
             import threading
             threading.Thread(target=speak_response, args=(response,client), daemon=True).start()
 

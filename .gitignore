@@ -1,4 +1,5 @@
 .venv/ 
 __pycache__/ 
 *.pyc 
-data/   # optional if you don't want to track local FAISS data
+data/*.bin   
+data/*.pkl

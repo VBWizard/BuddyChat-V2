@@ -22,6 +22,12 @@ def generate_response(user_input, identity_info, retrieved_text, chat_history, c
     identity_text = f"{identity_info['name']} (User's Preferred Name)" if identity_info["name"] else "No stored name yet."
 
     ai_prompt = f"""
+[INTERNAL INSTRUCTION]: Before your response, include two private tags in square brackets:
+1. A short tone tag: [Tone: gentle], [Tone: confident and upbeat], etc. This tag will not be shown or spoken aloud—it is used to control how your voice will sound via OpenAI's TTS engine.
+Make sure your tone tag is accurate for the emotional delivery you want to achieve, since it directly affects how you are heard.
+2. A short user tone tag: [UserTone: ...] — your best guess at the user's emotional tone based on their message. This will not be shown to the user or spoken aloud. Use your judgment and context.
+
+
 [Current Conversation Context]:
 {"\n".join(chat_history)}
 
