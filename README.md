@@ -23,6 +23,7 @@ BuddyChat-V2 is a modular, voice-powered AI assistant built with OpenAI’s GPT-
 ---
 
 ## 🛠️ Setup
+> Requires Python 3.10–3.13 (tested on 3.13.1)
 
 1. Clone this repo  
 2. Create and activate a virtual environment  
