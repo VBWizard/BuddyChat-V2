@@ -31,7 +31,7 @@ BuddyChat-V2 is a modular, voice-powered AI assistant built with OpenAI’s GPT-
 	then .venv\scripts\activate
 3. Install dependencies:
 	pip install -r requirements.txt
-4. Set your OpenAI key as an environment variable:
+4. Set your OpenAI key as an environment variable (OPENAI_API_KEY or API_KEY ):
 	NOTE: Will be upgraded to use other LLMs soon.
 5. run it: python main.py
 
