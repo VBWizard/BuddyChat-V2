@@ -63,7 +63,7 @@ def enter_ptt_mode(index, metadata, identity_info, model, client, chat_history, 
                 tts_instructions = "Speak naturally."
             # Play the response audio asynchronously
             import threading
-            threading.Thread(target=speak_response, args=(response,client), daemon=True).start()
+            threading.Thread(target=speak_response, args=(response,client,tts_instructions), daemon=True).start()
 
         now_str = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M %p %Z")
         # Maintain chat history window for later context
