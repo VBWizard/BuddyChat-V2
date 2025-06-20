@@ -5,11 +5,9 @@ from core.chat_engine import generate_response, load_identity
 from interface.ptt_loop import enter_ptt_mode
 from audio.tts import speak_response
 from utils.config import CONTEXT_WINDOW_SIZE, SPEAK_OUT
-from utils.network import get_proxy_client
+from utils.llm import get_chat_client, get_openai_client
 from tzlocal import get_localzone
 from datetime import datetime
-import openai
-from utils.keys import get_api_key
 from core.context import process_command
 import re
 
@@ -28,9 +26,9 @@ def run():
     identity_info = load_identity()
     # Embedding model used for similarity search
     model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-    # OpenAI client handles chat and speech API calls
-    client = openai.OpenAI(api_key=get_api_key(),
-                           http_client=get_proxy_client())
+    # Separate clients for chat completions and OpenAI-only services
+    openai_client = get_openai_client()
+    chat_client = get_chat_client()
 
     print("\n🚀 FAISS Memory Chat Started!")
 
@@ -44,13 +42,13 @@ def run():
         if user_input.lower() == "exit":
             break
         if user_input.lower() == "!ptt":
-            enter_ptt_mode(index, metadata, identity_info, model, client, chat_history, speak_out=SPEAK_OUT )
+            enter_ptt_mode(index, metadata, identity_info, model, openai_client, chat_client, chat_history, speak_out=SPEAK_OUT)
             continue
 
         embedding = model.encode([user_input], convert_to_numpy=True)
         # Recall relevant past conversation using vector search
         retrieved_text = retrieve_context(index, metadata, embedding)
-        response = generate_response(user_input, identity_info, retrieved_text, chat_history, client)
+        response = generate_response(user_input, identity_info, retrieved_text, chat_history, chat_client)
 
         print("\n🔍 FAISS Retrieved Memory:")
         # print(retrieved_text)
@@ -69,7 +67,7 @@ def run():
 
             # Run text-to-speech in a background thread so the REPL stays responsive
             import threading
-            threading.Thread(target=speak_response, args=(response,client, tts_instructions), daemon=True).start()
+            threading.Thread(target=speak_response, args=(response,openai_client, tts_instructions), daemon=True).start()
 
         now_str = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M %p %Z")
         # Keep a rolling window of conversation for context

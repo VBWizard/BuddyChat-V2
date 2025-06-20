@@ -11,7 +11,7 @@ import re
 
 local_tz = get_localzone()
 
-def enter_ptt_mode(index, metadata, identity_info, model, client, chat_history, speak_out=True):
+def enter_ptt_mode(index, metadata, identity_info, model, openai_client, chat_client, chat_history, speak_out=True):
     """Interactive push-to-talk loop using the microphone."""
     print("🎙️ PTT Mode ON — Hold spacebar to speak. Release to stop. Press Enter to send, or type 'cancel'. Type !ptt_off to exit.")
 
@@ -32,7 +32,7 @@ def enter_ptt_mode(index, metadata, identity_info, model, client, chat_history, 
             continue
 
         # Convert recorded audio to text using OpenAI Whisper API
-        user_transcript = transcribe_audio(client)
+        user_transcript = transcribe_audio(openai_client)
         print(f"👤 Transcribed Input: {user_transcript}")
         decision = input("✅ Press Enter to send, or type 'cancel' to discard: ").strip().lower()
         if decision == "cancel":
@@ -45,7 +45,7 @@ def enter_ptt_mode(index, metadata, identity_info, model, client, chat_history, 
         # Retrieve relevant past conversation to provide context
         embedding = model.encode([user_transcript], convert_to_numpy=True)
         retrieved_text = retrieve_context(index, metadata, embedding)
-        response = generate_response(user_transcript, identity_info, retrieved_text, chat_history, client)
+        response = generate_response(user_transcript, identity_info, retrieved_text, chat_history, chat_client)
 
         print("🔍 FAISS Retrieved Memory:")
         # print(retrieved_text)
@@ -63,7 +63,7 @@ def enter_ptt_mode(index, metadata, identity_info, model, client, chat_history, 
                 tts_instructions = "Speak naturally."
             # Play the response audio asynchronously
             import threading
-            threading.Thread(target=speak_response, args=(response,client,tts_instructions), daemon=True).start()
+            threading.Thread(target=speak_response, args=(response,openai_client,tts_instructions), daemon=True).start()
 
         now_str = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M %p %Z")
         # Maintain chat history window for later context

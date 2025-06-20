@@ -61,6 +61,20 @@ PROXY_HOST = "proxy.example.com"
 PROXY_PORT = 8080
 ```
 
+## 🔄 Using Local LLMs
+
+To chat with a local OpenAI-compatible server like **LM Studio** or
+**Ollama**, edit `utils/config.py`:
+
+```python
+# Example for LM Studio running on the default port
+CHAT_BASE_URL = "http://localhost:1234/v1"
+CHAT_MODEL = "your-local-model-name"
+```
+
+Set `CHAT_BASE_URL` to the server's base URL and `CHAT_MODEL` to the desired
+model name. Leave `CHAT_BASE_URL` as `None` to use OpenAI.
+
 ## 🧙 About
 
 Modularized and upgraded from a monolithic prototype.  
