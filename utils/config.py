@@ -17,3 +17,9 @@ PROXY_HOST = None   # e.g. "proxy.example.com"
 PROXY_PORT = None   # e.g. 8080
 
 os.makedirs(DATA_DIR, exist_ok=True)
+
+# Chat LLM configuration
+# ``CHAT_BASE_URL`` can point to a local OpenAI-compatible server such as
+# LM Studio or Ollama. When ``None`` (the default), OpenAI's servers are used.
+CHAT_BASE_URL = None  # e.g. "http://localhost:1234/v1" for LM Studio
+CHAT_MODEL = "gpt-4o"

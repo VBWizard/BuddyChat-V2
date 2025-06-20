@@ -2,7 +2,7 @@
 
 import os
 from datetime import datetime
-from utils.config import IDENTITY_FILE
+from utils.config import IDENTITY_FILE, CHAT_MODEL
 from tzlocal import get_localzone
 import pickle
 
@@ -64,9 +64,9 @@ Reference retrieved memory only if relevant, or if you want to take the conversa
 Ensure responses feel continuous and time-aware.
 """
 
-    # Send the full prompt to GPT-4o to get the assistant's reply
+    # Send the full prompt to the configured chat model
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": f"{default_prompt} You are an AI assistant with memory."},
             {"role": "user", "content": ai_prompt}
