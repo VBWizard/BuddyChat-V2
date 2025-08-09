@@ -19,16 +19,56 @@ def fetch_similar_messages(
     table_name: str,
     embedding: List[float],
     top_k: int = 6
-) -> List[Tuple[str, str, datetime]]:
+) -> List[Tuple[str, str, str, datetime, List[float], float]]:
+    """Fetch messages ordered by vector distance, returning metadata and embeddings."""
     with conn.cursor() as cur:
-        cur.execute(f"""
-            SELECT author_role, content, timestamp, embedding <-> %s::vector AS distance
+        cur.execute(
+            f"""
+            SELECT id, conversation_id, author_role, content, timestamp, embedding,
+                   embedding <-> %s::vector AS distance
             FROM {table_name}
             WHERE embedding IS NOT NULL
             ORDER BY embedding <-> %s::vector
             LIMIT %s
-        """, (embedding, embedding, top_k))
+            """,
+            (embedding, embedding, top_k),
+        )
         return cur.fetchall()
+
+
+def fetch_message_context(
+    conn,
+    conversation_id: str,
+    timestamp: datetime,
+    window: int = 1,
+) -> List[Tuple[str, str, datetime]]:
+    """Return surrounding messages within the same conversation for context."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT author_role, content, timestamp
+            FROM messages
+            WHERE conversation_id = %s AND timestamp < %s
+            ORDER BY timestamp DESC
+            LIMIT %s
+            """,
+            (conversation_id, timestamp, window),
+        )
+        prev_rows = cur.fetchall()[::-1]
+
+        cur.execute(
+            """
+            SELECT author_role, content, timestamp
+            FROM messages
+            WHERE conversation_id = %s AND timestamp >= %s
+            ORDER BY timestamp ASC
+            LIMIT %s
+            """,
+            (conversation_id, timestamp, window + 1),
+        )
+        next_rows = cur.fetchall()
+
+    return prev_rows + next_rows
 
 # --- INSERT Wrapper ---
 def insert_message_row(
