@@ -10,7 +10,7 @@ def speak_response(text, client, instructions):
     # Request audio from OpenAI's TTS endpoint
     response = client.audio.speech.create(
         model="gpt-4o-mini-tts",
-        voice="ash",  # voice name
+        voice="nova",  # voice name
         input=text,
         instructions=instructions
     )

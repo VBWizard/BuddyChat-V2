@@ -1,75 +1,122 @@
-"""Utilities for generating chat responses using OpenAI's API."""
+from __future__ import annotations
+"""BuddyChat – unified chat response generator.
 
-import os
+This refactor replaces the old "single‑blob" prompt with a clean, OpenAI‑style
+messages array that works for *both* the OpenAI cloud API and local LLM servers
+exposing a compatible endpoint (LM Studio / Ollama / etc.).
+
+Key features
+------------
+*   Uses :pyfunc:`prompt_builder.assemble_messages` to create the messages.
+*   Keeps the private `[Tone: …][UserTone: …]` tag mechanic alive.
+*   Strips the tags before the text is spoken / displayed.
+*   Leaves public OpenAI behaviour **unchanged** – no extra params needed.
+"""
+
 from datetime import datetime
-from utils.config import IDENTITY_FILE, CHAT_MODEL
-from tzlocal import get_localzone
+from pathlib import Path
+from typing import Dict, List
+import os
+import re
 import pickle
 
-local_tz = get_localzone()
+from tzlocal import get_localzone
 
-def load_identity():
-    """Load persisted identity information if available."""
-    if os.path.exists(IDENTITY_FILE):
+from utils.config import IDENTITY_FILE, CHAT_MODEL
+from core.prompt_builder import assemble_messages, strip_private_tags
+
+__all__ = [
+    "generate_response",
+]
+
+local_tz = get_localzone()
+BUDDY_SYS_PROMPT_PATH = Path("data\\buddy_system_prompt.txt")
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _load_identity() -> Dict[str, str | None]:
+    """Load persisted identity information (if any)."""
+    if Path(IDENTITY_FILE).exists():
         with open(IDENTITY_FILE, "rb") as f:
             return pickle.load(f)
     return {"name": None}
 
-def generate_response(user_input, identity_info, retrieved_text, chat_history, client):
-    """Generate a chat reply from OpenAI based on history and memory.
 
-    Args:
-        user_input (str): Latest message from the user.
-        identity_info (dict): Stored user identity information.
-        retrieved_text (str): Prior conversation pulled from FAISS.
-        chat_history (list[str]): Recent chat turns for context.
-        client (openai.OpenAI): OpenAI client used for API calls.
+def _build_system_prompt(base_text: str, identity_info: Dict[str, str | None], retrieved: str) -> str:
+    """Craft the *single* system prompt sent on every request."""
+    name_line = f"User's Preferred Name: {identity_info.get('name') or 'Unknown'}"
+    memory_block = retrieved.strip() or "No relevant memory."
+    return (
+        f"{base_text.strip()}\n\n"
+        "[Persistent Identity Information]:\n" + name_line + "\n\n"
+        "[Relevant Memory]:\n" + memory_block + "\n"
+    )
 
-    Returns:
-        str: Assistant response text including optional tone tags.
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def generate_response(
+    user_input: str,
+    identity_info: Dict[str, str | None] | None,
+    retrieved_text: str,
+    chat_history: List[Dict[str, str]],
+    client,
+    temperature: float = 0.7,
+) -> str:
+    """Generate an assistant reply given the latest user input and context.
+
+    Parameters
+    ----------
+    user_input
+        Latest message from the user.
+    identity_info
+        Dictionary with persisted identity fields (at minimum ``{"name": str}``).
+        If *None*, we fall back to the identity file on disk.
+    retrieved_text
+        Memory snippet fetched from FAISS for the current turn.
+    chat_history
+        List of dicts (``{"role": "user"|"assistant", "content": str}``) representing
+        recent turns **in chronological order**.
+    client
+        An OpenAI‑compatible client instance (cloud or local).
+    temperature
+        Sampling temperature to pass through.
     """
+    if identity_info is None:
+        identity_info = _load_identity()
 
-    # System prompt can be overridden by a text file for easy tweaking
-    default_prompt = "Your name is Buddy."
-    if os.path.exists("buddy_system_prompt.txt"):
-        with open("buddy_system_prompt.txt", "r", encoding="utf-8") as f:
-            default_prompt = f.read().strip()
+    # ---------------------------------------------------------------------
+    # Build system prompt.
+    # ---------------------------------------------------------------------
+    if BUDDY_SYS_PROMPT_PATH.exists():
+        base_prompt = BUDDY_SYS_PROMPT_PATH.read_text(encoding="utf-8").strip()
+    else:
+        base_prompt = "Your name is Assistant."
 
-    current_time = datetime.now(local_tz).strftime("%Y-%m-%d %I:%M %p %Z")
-    identity_text = f"{identity_info['name']} (User's Preferred Name)" if identity_info["name"] else "No stored name yet."
+    system_prompt = _build_system_prompt(base_prompt, identity_info, retrieved_text)
 
-    # Build a detailed prompt including chat history and recalled memory
-    ai_prompt = f"""
-[INTERNAL INSTRUCTION]: Before your response, include two private tags in square brackets:
-1. A short tone tag: [Tone: gentle], [Tone: confident and upbeat], etc. This tag will not be shown or spoken aloud—it is used to control how your voice will sound via OpenAI's TTS engine.
-Make sure your tone tag is accurate for the emotional delivery you want to achieve, since it directly affects how you are heard.
-2. A short user tone tag: [UserTone: ...] — your best guess at the user's emotional tone based on their message. This will not be shown to the user or spoken aloud. Use your judgment and context.
+    # ---------------------------------------------------------------------
+    # Assemble message array.
+    # ---------------------------------------------------------------------
+    messages = assemble_messages(
+        base_system=system_prompt,
+        history=chat_history,
+        user_msg=user_input,
+    )
 
-
-[Current Conversation Context]:
-{"\n".join(chat_history)}
-
-[Previous conversation retrieved from FAISS]:
-{retrieved_text}
-
-[Persistent Identity Information]:
-{identity_text}
-
-[User’s new message] (Current Time: {current_time}):
-{user_input}
-
-[Task]:
-Use the conversation context to continue the discussion naturally.
-Reference retrieved memory only if relevant, or if you want to take the conversation in a new direction.
-Ensure responses feel continuous and time-aware.
-"""
-
-    # Send the full prompt to the configured chat model
+    # ---------------------------------------------------------------------
+    # Call the model.
+    # ---------------------------------------------------------------------
     response = client.chat.completions.create(
         model=CHAT_MODEL,
-        messages=[
-            {"role": "system", "content": f"{default_prompt} You are an AI assistant with memory."},
-            {"role": "user", "content": ai_prompt}
-        ]
+        messages=messages,
+        temperature=temperature,
     )
-    return response.choices[0].message.content
+
+    raw_reply: str = response.choices[0].message.content
+    # clean_reply = strip_private_tags(raw_reply)
+    return raw_reply

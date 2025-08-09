@@ -18,9 +18,9 @@ def get_chat_client() -> openai.OpenAI:
         kwargs["base_url"] = CHAT_BASE_URL
         # Local servers typically don't require an API key but the OpenAI
         # client expects one, so provide a placeholder if none is set.
-        kwargs["api_key"] = os.getenv("OPENAI_API_KEY", "local-api-key")
-    else:
         kwargs["api_key"] = get_api_key()
+    else:
+        raise Exception("The CHAT_BASE_URL in config.py must be set before running the program.")
     return openai.OpenAI(**kwargs)
 
 
