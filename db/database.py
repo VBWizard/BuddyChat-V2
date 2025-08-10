@@ -19,7 +19,7 @@ def fetch_similar_messages(
     table_name: str,
     embedding: List[float],
     top_k: int = 6
-) -> List[Tuple[str, str, str, datetime, List[float], float]]:
+) -> List[Tuple[str, str, str, str, datetime, List[float], float]]:
     """Fetch messages ordered by vector distance, returning metadata and embeddings."""
     with conn.cursor() as cur:
         cur.execute(

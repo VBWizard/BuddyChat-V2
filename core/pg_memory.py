@@ -1,5 +1,6 @@
 import psycopg2
 import numpy as np
+import json
 from datetime import datetime
 from typing import List
 from db.database import (
@@ -100,6 +101,12 @@ def search_memory(
         adjusted = distance + length_penalty + emoji_penalty
         if adjusted > RELEVANCE_THRESHOLD:
             continue
+        if isinstance(emb, str):
+            try:
+                emb = json.loads(emb)
+            except json.JSONDecodeError:
+                emb = [float(x) for x in emb.strip("[]{} ").split(",") if x.strip()]
+        emb_array = np.array(emb, dtype=float)
         candidates.append(
             {
                 "id": msg_id,
@@ -107,7 +114,7 @@ def search_memory(
                 "role": role,
                 "content": content,
                 "timestamp": ts,
-                "embedding": np.array(emb, dtype=float),
+                "embedding": emb_array,
                 "adjusted": adjusted,
             }
         )
