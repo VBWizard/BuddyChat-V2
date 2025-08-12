@@ -22,6 +22,43 @@ BuddyChat-V2 is a modular, voice-powered AI assistant built with OpenAI’s GPT-
 
 ---
 
+🧠 Memory Retrieval v2 (Postgres + Contextual MMR)
+BuddyChat’s memory system now supports context-rich and diverse retrieval using PostgreSQL and vector embeddings.
+
+Key Enhancements
+Contextual Snippets
+Retrieved memories now include surrounding conversation turns, creating coherent and emotionally aware results.
+
+Noise Filtering
+Messages that are too short, or contain only emojis, are filtered out to improve quality.
+
+Maximal Marginal Relevance (MMR)
+Memory hits are ranked for both relevance and diversity, reducing repetition and surfacing a broader spectrum of useful context.
+
+Penalty Adjustments
+
+Short messages: small penalty
+
+Emoji-heavy messages: additional penalty
+These help downrank less informative entries during scoring.
+
+Retrieval Flow
+Vector similarity search via PostgreSQL
+
+Penalty-adjusted scoring (length, emojis)
+
+MMR post-processing to select top-N diverse results
+
+Surrounding context rows fetched and included
+
+Configured Thresholds
+SHORT_LENGTH_THRESHOLD = 30
+SHORT_PENALTY = 0.05
+EMOJI_PENALTY_WEIGHT = 0.02
+RELEVANCE_THRESHOLD = 1.0
+
+---
+
 ## 🛠️ Setup
 > Requires Python 3.10–3.13 (tested on 3.13.1)
 
